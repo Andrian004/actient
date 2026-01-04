@@ -7,8 +7,8 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "esnext",
+    "module": "esnext",
+    "target": "es2022",
     "types": [],
     // For nodejs:
     // "lib": ["esnext"],
@@ -19,6 +19,7 @@
     "sourceMap": true,
     "declaration": true,
     "declarationMap": true,
+    "emitDeclarationOnly": false,
 
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
@@ -39,7 +40,9 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "esModuleInterop": true
   },
   "include": ["src/**/*", "test/**/*"]
 }

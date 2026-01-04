@@ -1,14 +1,10 @@
 import {
   ActionRegistry,
   // ActionDefinition,
-} from "./registry/action-registry.js";
-import type { IntentParser } from "./intent/intent-parser.js";
+} from "./registry/action-registry";
+import type { IntentParser } from "./intent/intent-parser";
 import type { ZodSchema } from "zod";
-
-export interface Intent {
-  action: string;
-  params: Record<string, any>;
-}
+import type { Intent } from "./types/intent";
 
 export interface AIProvider {
   parseIntent(prompt: string, availableActions: any[]): Promise<Intent>;
@@ -27,6 +23,7 @@ export class AIAgent {
     name: string,
     config: {
       description: string;
+      rules?: string[];
       schema: ZodSchema<TParams>;
       handler: (params: TParams) => Promise<TResult>;
     }
@@ -42,13 +39,15 @@ export class AIAgent {
       throw new Error("Invalid intent: missing action");
     }
 
-    if (intent.action === "UNKNOWN") {
-      throw new Error("Unable to determine user intent");
+    const action = this.registry.get(intent.action);
+
+    if (intent.action === "UNKNOWN" && !action) {
+      throw new Error(
+        "Unable to determine user intent, please define a default action."
+      );
     }
 
-    const action = this.registry.get(intent.action);
     const validatedParams = action.schema.parse(intent.params);
-
     return action.handler(validatedParams);
   }
 }

@@ -1,20 +1,33 @@
-import OpenAI from "openai";
-import type { Intent } from "../agent.js";
-import type { AvailableAction, IntentParser } from "../intent/intent-parser.js";
+import type { Intent } from "../types/intent";
+import type { AvailableAction, IntentParser } from "../intent/intent-parser";
+import { loadOpenAI } from "../utils/loader";
+import { generateSystemPrompt } from "../utils/prompt";
+import type OpenAI from "openai";
 
 export class OpenAIIntentParser implements IntentParser {
-  private client: OpenAI;
-  private model: string;
+  private client?: OpenAI;
+  private readonly apiKey;
+  private readonly model: string;
 
   constructor(options: { apiKey: string; model?: string }) {
-    this.client = new OpenAI({ apiKey: options.apiKey });
+    this.apiKey = options.apiKey;
     this.model = options.model ?? "gpt-4o-mini";
   }
 
-  async parse(prompt: string, actions: AvailableAction[]): Promise<Intent> {
-    const systemPrompt = this.buildSystemPrompt(actions);
+  private async getClient(): Promise<OpenAI> {
+    if (this.client) return this.client;
 
-    const response = await this.client.chat.completions.create({
+    const { default: OpenAI } = await loadOpenAI();
+    this.client = new OpenAI({ apiKey: this.apiKey });
+
+    return this.client;
+  }
+
+  async parse(prompt: string, actions: AvailableAction[]): Promise<Intent> {
+    const systemPrompt = generateSystemPrompt(actions);
+    const client = await this.getClient();
+
+    const response = await client.chat.completions.create({
       model: this.model,
       temperature: 0,
       messages: [
@@ -32,40 +45,6 @@ export class OpenAIIntentParser implements IntentParser {
     return this.safeParseJSON(content);
   }
 
-  /**
-   * SYSTEM PROMPT = FONDASI STABILITAS
-   */
-  private buildSystemPrompt(actions: AvailableAction[]): string {
-    return `
-You are an intent parser.
-
-Your task is to translate user input into a structured JSON intent.
-
-Available actions:
-${actions.map((a) => `- ${a.name}: ${a.description}`).join("\n")}
-
-Rules:
-- Respond ONLY with valid JSON
-- Do NOT add explanation
-- Do NOT invent actions
-- Use only available actions
-- JSON format:
-{
-  "action": "action_name",
-  "params": { ... }
-}
-
-If no action is relevant, return:
-{
-  "action": "UNKNOWN",
-  "params": {}
-}
-`.trim();
-  }
-
-  /**
-   * JSON parsing dengan guard
-   */
   private safeParseJSON(text: string): Intent {
     try {
       return JSON.parse(text);

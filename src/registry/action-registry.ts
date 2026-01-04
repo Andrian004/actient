@@ -7,6 +7,7 @@ export type ActionHandler<TParams = any, TResult = any> = (
 
 export interface ActionDefinition<TParams = any, TResult = any> {
   description: string;
+  rules?: string[];
   schema: ZodSchema<TParams>;
   handler: ActionHandler<TParams, TResult>;
 }
@@ -37,11 +38,13 @@ export class ActionRegistry {
 
   list(): Array<{
     name: string;
+    rules: string[];
     description: string;
     parameters: Record<string, string>;
   }> {
     return Array.from(this.actions.entries()).map(([name, action]) => ({
       name,
+      rules: action.rules || [],
       description: action.description,
       parameters: this.zodToSimpleSchema(action.schema),
     }));

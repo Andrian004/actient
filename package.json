@@ -2,20 +2,47 @@
   "name": "action-bot",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
+    "action-bot",
     "ai-action-agents"
   ],
   "author": "Andrian004",
   "license": "MIT",
+  "files": [
+    "dist"
+  ],
   "dependencies": {
-    "groq-sdk": "^0.37.0",
-    "openai": "^6.15.0",
-    "typescript": "^5.9.3",
     "zod": "^4.2.1"
+  },
+  "peerDependencies": {
+    "openai": "^4.0.0 || ^6.0.0",
+    "groq-sdk": "^0.37.0",
+    "@google/genai": "^1.0.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": {
+      "optional": true
+    },
+    "groq-sdk": {
+      "optional": true
+    },
+    "@google/genai": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "openai": "^4.0.0 || ^6.0.0",
+    "groq-sdk": "^0.37.0",
+    "@google/genai": "^1.0.0"
   }
 }
