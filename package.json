@@ -15,6 +15,10 @@
     "action-bot",
     "ai-action-agents"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Andrian004/actient"
+  },
   "author": "Andrian004",
   "license": "MIT",
   "files": [
