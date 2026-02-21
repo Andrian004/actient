@@ -2,7 +2,7 @@ import type { ZodSchema } from "zod";
 import { z } from "zod";
 
 export type ActionHandler<TParams = any, TResult = any> = (
-  params: TParams
+  params: TParams,
 ) => Promise<TResult>;
 
 export interface ActionDefinition<TParams = any, TResult = any> {
@@ -17,7 +17,7 @@ export class ActionRegistry {
 
   register<TParams, TResult>(
     name: string,
-    action: ActionDefinition<TParams, TResult>
+    action: ActionDefinition<TParams, TResult>,
   ) {
     if (this.actions.has(name)) {
       throw new Error(`Action "${name}" already registered`);

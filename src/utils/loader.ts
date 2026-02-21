@@ -1,32 +1,16 @@
-export async function loadGemini() {
-  try {
-    return await import("@google/genai");
-  } catch {
-    throw new Error(
-      "Gemini support requires `@google/genai`. Install it with:\n" +
-        "npm install @google/genai"
-    );
-  }
-}
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 
-export async function loadOpenAI() {
+export function loadPackage<T>(packageName: string): T {
   try {
-    return await import("openai");
-  } catch {
-    throw new Error(
-      "OpenAI support requires `openai`. Install it with:\n" +
-        "npm install openai"
-    );
-  }
-}
-
-export async function loadGroq() {
-  try {
-    return await import("groq-sdk");
-  } catch {
-    throw new Error(
-      "Groq support requires `groq-sdk`. Install it with:\n" +
-        "npm install groq-sdk"
-    );
+    return require(packageName);
+  } catch (err: any) {
+    if (err?.code === "MODULE_NOT_FOUND") {
+      throw new Error(
+        `This feature requires "${packageName}". Install it with:\n` +
+          `npm install ${packageName}`,
+      );
+    }
+    throw err;
   }
 }

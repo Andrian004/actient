@@ -1,11 +1,11 @@
 import type { Intent } from "../types/intent";
 import type { AvailableAction, IntentParser } from "../intent/intent-parser";
 import { generateSystemPrompt } from "../utils/prompt";
-import { loadGroq } from "../utils/loader";
-import type Groq from "groq-sdk";
+import { loadPackage } from "../utils/loader";
+import type * as GroqModule from "groq-sdk";
 
 export class GroqIntentParser implements IntentParser {
-  private client?: Groq;
+  private client?: GroqModule.Groq;
   private readonly apiKey: string;
   private readonly model: string;
 
@@ -14,10 +14,10 @@ export class GroqIntentParser implements IntentParser {
     this.model = options.model ?? "llama3-70b-8192";
   }
 
-  private async getClient(): Promise<Groq> {
+  private async getClient(): Promise<GroqModule.Groq> {
     if (this.client) return this.client;
 
-    const { default: Groq } = await loadGroq();
+    const { default: Groq } = loadPackage<typeof GroqModule>("groq-sdk");
     this.client = new Groq({ apiKey: this.apiKey });
 
     return this.client;

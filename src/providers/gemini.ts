@@ -1,11 +1,11 @@
 import type { Intent } from "../types/intent";
 import type { AvailableAction, IntentParser } from "../intent/intent-parser";
 import { generateSystemPrompt } from "../utils/prompt";
-import { loadGemini } from "../utils/loader";
-import type { GoogleGenAI } from "@google/genai"; // just for type import
+import { loadPackage } from "../utils/loader";
+import type * as GeminiModule from "@google/genai"; // just for type import
 
 export class GeminiIntentParser implements IntentParser {
-  private client?: GoogleGenAI;
+  private client?: GeminiModule.GoogleGenAI;
   private readonly apiKey: string;
   private readonly model: string;
 
@@ -15,10 +15,10 @@ export class GeminiIntentParser implements IntentParser {
   }
 
   // lazy loader
-  private async getClient(): Promise<GoogleGenAI> {
+  private async getClient(): Promise<GeminiModule.GoogleGenAI> {
     if (this.client) return this.client;
 
-    const { GoogleGenAI } = await loadGemini();
+    const { GoogleGenAI } = loadPackage<typeof GeminiModule>("@google/genai");
     this.client = new GoogleGenAI({ apiKey: this.apiKey });
 
     return this.client;

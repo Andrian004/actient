@@ -1,11 +1,11 @@
 import type { Intent } from "../types/intent";
 import type { AvailableAction, IntentParser } from "../intent/intent-parser";
-import { loadOpenAI } from "../utils/loader";
+import { loadPackage } from "../utils/loader";
 import { generateSystemPrompt } from "../utils/prompt";
-import type OpenAI from "openai";
+import type * as OpenAIModule from "openai";
 
 export class OpenAIIntentParser implements IntentParser {
-  private client?: OpenAI;
+  private client?: OpenAIModule.OpenAI;
   private readonly apiKey;
   private readonly model: string;
 
@@ -14,10 +14,10 @@ export class OpenAIIntentParser implements IntentParser {
     this.model = options.model ?? "gpt-4o-mini";
   }
 
-  private async getClient(): Promise<OpenAI> {
+  private async getClient(): Promise<OpenAIModule.OpenAI> {
     if (this.client) return this.client;
 
-    const { default: OpenAI } = await loadOpenAI();
+    const { default: OpenAI } = loadPackage<typeof OpenAIModule>("openai");
     this.client = new OpenAI({ apiKey: this.apiKey });
 
     return this.client;

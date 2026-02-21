@@ -70,7 +70,7 @@ You need to install the SDK before using this library. Use the intent parser imp
 | Provider | SDK             | Intent Parser                                                  |
 | -------- | --------------- | -------------------------------------------------------------- |
 | Open AI  | `openai`        | `OpenAIIntentParser`, imported from `actient/providers/openai` |
-| Groq     | `grok-sdk`      | `GroqIntentParser`, imported from `actient/providers/groq`     |
+| Groq     | `groq-sdk`      | `GroqIntentParser`, imported from `actient/providers/groq`     |
 | Gemini   | `@google/genai` | `GeminiIntentParser`, imported from `actient/providers/gemini` |
 
 ### AI Agent
