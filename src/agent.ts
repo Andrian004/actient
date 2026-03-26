@@ -5,18 +5,33 @@ import {
 import type { IntentParser } from "./intent/intent-parser";
 import type { ZodSchema } from "zod";
 import type { Intent } from "./types/intent";
+import MemorySessionStore from "./sessions/memory";
+import type { AgentSession, SessionStore } from "./types/session";
 
 export interface AIProvider {
   parseIntent(prompt: string, availableActions: any[]): Promise<Intent>;
 }
 
+type Session = {
+  enabled: Boolean;
+  driver: "memory";
+  length: number;
+};
+
 export class AIAgent {
   private registry: ActionRegistry;
   private intentParser: IntentParser;
+  private session: Session;
+  private sessionStore: SessionStore<AgentSession> | null = null;
 
-  constructor(options: { ai: IntentParser }) {
+  constructor(options: { ai: IntentParser; session: Session }) {
     this.registry = new ActionRegistry();
     this.intentParser = options.ai;
+    this.session = options.session;
+
+    if (this.session.driver === "memory") {
+      this.sessionStore = new MemorySessionStore<AgentSession>();
+    }
   }
 
   registerAction<TParams, TResult>(
@@ -26,14 +41,24 @@ export class AIAgent {
       rules?: string[];
       schema: ZodSchema<TParams>;
       handler: (params: TParams) => Promise<TResult>;
-    }
+    },
   ) {
     this.registry.register(name, config);
   }
 
-  async execute(prompt: string): Promise<any> {
+  async execute(
+    prompt: string,
+    options?: {
+      sessionId?: string;
+    },
+  ): Promise<any> {
     const availableActions = this.registry.list();
-    const intent = await this.intentParser.parse(prompt, availableActions);
+    if (!this.sessionStore) throw new Error("Session is not defined");
+
+    const intent = await this.intentParser.parse(prompt, availableActions, {
+      sessionId: options?.sessionId || "",
+      sessionStore: this.sessionStore,
+    });
 
     if (!intent?.action) {
       throw new Error("Invalid intent: missing action");
@@ -43,7 +68,7 @@ export class AIAgent {
 
     if (intent.action === "UNKNOWN" && !action) {
       throw new Error(
-        "Unable to determine user intent, please define a default action."
+        "Unable to determine user intent, please define a default action.",
       );
     }
 

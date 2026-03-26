@@ -38,9 +38,8 @@
     "zod": "^4.2.1"
   },
   "peerDependencies": {
-    "openai": "^4.0.0 || ^6.0.0",
-    "groq-sdk": "^0.37.0",
-    "@google/genai": "^1.0.0"
+    "@google/genai": "^1.0.0",
+    "openai": "^4.0.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "openai": {
@@ -54,10 +53,10 @@
     }
   },
   "devDependencies": {
-    "tsup": "^8.5.1",
-    "typescript": "^5.9.3",
+    "@google/genai": "^1.0.0",
+    "@types/node": "^25.5.0",
     "openai": "^4.0.0 || ^6.0.0",
-    "groq-sdk": "^0.37.0",
-    "@google/genai": "^1.0.0"
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   }
 }
