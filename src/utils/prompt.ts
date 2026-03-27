@@ -17,7 +17,7 @@ ${Object.entries(a.parameters)
   Specific rules: ${
     a.rules?.length ? a.rules.map((r) => `    - ${r}`).join("\n") : "    - None"
   }
-  `
+  `,
   )
   .join("\n")}
 
@@ -43,4 +43,49 @@ If no action matches, return:
   "params": {}
 }
 `.trim();
+};
+
+export const generatePlanPrompt = (actions: AvailableAction[]): string => {
+  return `
+  You are an execution planner.
+
+Your task is to convert user request into ordered execution steps.
+
+Available actions:
+${actions
+  .map(
+    (a) => `- ${a.name}: ${a.description}
+  Parameters:
+${Object.entries(a.parameters)
+  .map(([key, type]) => `    - ${key}: ${type}`)
+  .join("\n")}
+  Specific rules: ${
+    a.rules?.length ? a.rules.map((r) => `    - ${r}`).join("\n") : "    - None"
+  }
+  `,
+  )
+  .join("\n")}
+
+Rules:
+- Return ONLY valid JSON
+- Do NOT explain anything
+- Do NOT include markdown
+- Do NOT invent actions
+- Only use listed actions
+- Steps must be ordered logically
+- If a step depends on previous result, use "$stepId.property"
+- Only reference step IDs defined earlier
+- Do NOT assume hidden context
+
+Format:
+{
+  "steps": [
+    {
+      "id": "optional_string",
+      "action": "action_name",
+      "params": {}
+    }
+  ]
+}
+  `;
 };

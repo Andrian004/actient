@@ -1,4 +1,5 @@
 import type { Intent } from "../types/intent";
+import type { SessionStore, AgentSession } from "../types/session";
 
 export interface AvailableAction {
   name: string;
@@ -8,5 +9,9 @@ export interface AvailableAction {
 }
 
 export interface IntentParser {
-  parse(prompt: string, actions: AvailableAction[]): Promise<Intent>;
+  parse(
+    prompt: string,
+    actions: AvailableAction[],
+    options?: { sessionId: string; sessionStore: SessionStore<AgentSession> },
+  ): Promise<Intent>;
 }

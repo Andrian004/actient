@@ -1,8 +1,10 @@
 import type { Intent } from "../types/intent";
+import type { AgentSession, AIMessage, SessionStore } from "../types/session";
 import type { AvailableAction, IntentParser } from "../intent/intent-parser";
 import { generateSystemPrompt } from "../utils/prompt";
 import { loadPackage } from "../utils/loader";
 import type * as GeminiModule from "@google/genai"; // just for type import
+import { formatContents } from "../utils/content-formatter";
 
 export class GeminiIntentParser implements IntentParser {
   private client?: GeminiModule.GoogleGenAI;
@@ -24,27 +26,61 @@ export class GeminiIntentParser implements IntentParser {
     return this.client;
   }
 
-  async parse(prompt: string, actions: AvailableAction[]): Promise<Intent> {
+  async parse(
+    prompt: string | string[],
+    actions: AvailableAction[],
+    options?: { sessionId: string; sessionStore: SessionStore<AgentSession> },
+  ): Promise<Intent> {
     const client = await this.getClient();
     const systemPrompt = generateSystemPrompt(actions);
 
+    let history: AIMessage[] = [];
+
+    if (options?.sessionId && options.sessionStore) {
+      const session = await options.sessionStore.get(options.sessionId);
+      if (session) history = session.messages;
+    }
+
+    const newMessage: AIMessage = {
+      role: "user",
+      content: Array.isArray(prompt) ? prompt.join("\n") : prompt,
+    };
+
+    const messages: AIMessage[] = [
+      { role: "system", content: systemPrompt },
+      ...history,
+      newMessage,
+    ];
+
+    const contents = formatContents(messages, "gemini");
+
     const result = await client.models.generateContent({
       model: this.model,
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: systemPrompt + "\n\nUser input:\n" + prompt }],
-        },
-      ],
+      contents,
     });
 
-    const content = result.text;
+    const responseText = result.text;
 
-    if (!content) {
+    if (!responseText) {
       throw new Error("Gemini returned empty response");
     }
 
-    return this.safeParseJSON(content);
+    if (options?.sessionId && options.sessionStore) {
+      const session = (await options.sessionStore.get(options.sessionId)) ?? {
+        messages: [],
+        state: {},
+      };
+
+      session.messages.push(newMessage);
+      session.messages.push({
+        role: "assistant",
+        content: responseText,
+      });
+
+      await options.sessionStore.set(options.sessionId, session);
+    }
+
+    return this.safeParseJSON(responseText);
   }
 
   // json guard
