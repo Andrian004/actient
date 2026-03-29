@@ -1,11 +1,7 @@
-import {
-  ActionRegistry,
-  // ActionDefinition,
-} from "./registry/action-registry";
+import { ActionRegistry } from "./registry/action-registry";
 import type { IntentParser } from "./intent/intent-parser";
 import type { ZodSchema } from "zod";
 import type { Intent } from "./types/intent";
-import MemorySessionStore from "./sessions/memory";
 import type { AgentSession, SessionStore } from "./types/session";
 
 export interface AIProvider {
@@ -14,8 +10,8 @@ export interface AIProvider {
 
 type Session = {
   enabled: Boolean;
-  driver: "memory";
-  length: number;
+  store?: SessionStore<AgentSession>;
+  maxLength?: number;
 };
 
 export class AIAgent {
@@ -29,8 +25,14 @@ export class AIAgent {
     this.intentParser = options.ai;
     this.session = options.session;
 
-    if (this.session.driver === "memory") {
-      this.sessionStore = new MemorySessionStore<AgentSession>();
+    if (this.session.enabled) {
+      if (!this.session.store) {
+        throw new Error(
+          "Session store must be provided when session is enabled",
+        );
+      }
+
+      this.sessionStore = this.session.store;
     }
   }
 
@@ -58,6 +60,7 @@ export class AIAgent {
     const intent = await this.intentParser.parse(prompt, availableActions, {
       sessionId: options?.sessionId || "",
       sessionStore: this.sessionStore,
+      maxLength: this.session?.maxLength || 0,
     });
 
     if (!intent?.action) {

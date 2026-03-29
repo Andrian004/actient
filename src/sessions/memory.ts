@@ -1,13 +1,13 @@
-import type { SessionStore } from "../types/session";
+import type { SessionStore, AgentSession } from "../types/session";
 
-export default class MemorySessionStore<T> implements SessionStore<T> {
-  private store = new Map<string, T>();
+export class MemorySessionStore implements SessionStore<AgentSession> {
+  private store = new Map<string, AgentSession>();
 
-  async get(sessionId: string): Promise<T | null> {
+  async get(sessionId: string): Promise<AgentSession | null> {
     return this.store.get(sessionId) ?? null;
   }
 
-  async set(sessionId: string, data: T): Promise<void> {
+  async set(sessionId: string, data: AgentSession): Promise<void> {
     this.store.set(sessionId, data);
   }
 

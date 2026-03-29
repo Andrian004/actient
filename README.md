@@ -11,6 +11,10 @@ Connect and run your functions with your favorite AI easier.
   - [AI Agent](#ai-agent)
   - [registerAction()](#registeraction)
   - [execute()](#execute)
+- [Sessions](#session)
+  - [Memory Store](#memory-store)
+  - [Redis](#redis-store)
+  - [Custom Store](#custom-store)
 - [Best Practices](#best-practices)
   - [Unknown action](#unknown-action)
   - [Specific rules](#specific-rules)
@@ -126,6 +130,82 @@ Runs agent based on user input.
 
 ```js
 const result = await agent.execute("User prompt");
+```
+
+## Session
+
+You can make your AI to memorize the context of conversation to better experience.
+
+```js
+import { MemorySessionStore } from "actient/sessions";
+
+const agent = new AIAgent({
+  ai: new GeminiIntentParser(),
+  session: {
+    enabled: true, // default false
+    store: new MemorySessionStore(),
+    maxLength: 10, // length cache of messages
+  },
+});
+```
+
+### Memory Store
+
+This is a simple way to store your conversations but it's not recomended for complex case.
+
+```js
+import { MemorySessionStore } from "actient/sessions";
+
+const agent = new AIAgent({
+  ai: new GeminiIntentParser(),
+  session: {
+    enabled: true, // default false
+    store: new MemorySessionStore(),
+    maxLength: 10, // length cache of messages
+  },
+});
+```
+
+### Redis Store
+
+This is the better way to implement session store.
+
+```js
+import { RedisSessionStore } from "actient/sessions";
+
+const redis = new Redis(); // from ioredis
+
+const agent = new AIAgent({
+  ai: new GeminiIntentParser(),
+  session: {
+    enabled: true, // default false
+    store: new RedisSessionStore(redis, 3600),
+    maxLength: 10, // length cache of messages
+  },
+});
+```
+
+### Custom Store
+
+You can create custom store by your own. You can integrate with your favorite database.
+
+```js
+import type { AgentSession } from "actient";
+
+class MyCustomStore implements SessionStore<AgentSession> {
+  async get(sessionId: string) { ... }
+  async set(sessionId: string, data: AgentSession) { ... }
+  async clear(sessionId: string) { ... }
+}
+
+const agent = new AIAgent({
+  ai: new GeminiIntentParser(),
+  session: {
+    enabled: true, // default false
+    store: new MyCustomStore(),
+    maxLength: 10, // length cache of messages
+  },
+});
 ```
 
 ## Best Practices
