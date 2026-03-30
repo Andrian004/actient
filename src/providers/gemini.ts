@@ -10,10 +10,16 @@ export class GeminiIntentParser implements IntentParser {
   private client?: GeminiModule.GoogleGenAI;
   private readonly apiKey: string;
   private readonly model: string;
+  // private readonly opts: GeminiModule.GoogleGenAIOptions | undefined;
 
-  constructor(options: { apiKey: string; model?: string }) {
+  constructor(options: {
+    apiKey: string;
+    model?: string;
+    // opts?: GeminiModule.GoogleGenAIOptions;
+  }) {
     this.apiKey = options.apiKey;
     this.model = options.model ?? "gemini-2.5-flash";
+    // this.opts = options.opts;
   }
 
   // lazy loader
@@ -29,7 +35,11 @@ export class GeminiIntentParser implements IntentParser {
   async parse(
     prompt: string | string[],
     actions: AvailableAction[],
-    options?: { sessionId: string; sessionStore: SessionStore<AgentSession> },
+    options?: {
+      sessionId: string;
+      sessionStore: SessionStore<AgentSession>;
+      maxLength?: number;
+    },
   ): Promise<Intent> {
     const client = await this.getClient();
     const systemPrompt = generateSystemPrompt(actions);
@@ -66,7 +76,7 @@ export class GeminiIntentParser implements IntentParser {
     }
 
     if (options?.sessionId && options.sessionStore) {
-      const session = (await options.sessionStore.get(options.sessionId)) ?? {
+      let session = (await options.sessionStore.get(options.sessionId)) ?? {
         messages: [],
         state: {},
       };
@@ -76,6 +86,13 @@ export class GeminiIntentParser implements IntentParser {
         role: "assistant",
         content: responseText,
       });
+
+      if (options.maxLength && options.maxLength > 0) {
+        session = {
+          ...session,
+          messages: session.messages.slice(-options.maxLength),
+        };
+      }
 
       await options.sessionStore.set(options.sessionId, session);
     }

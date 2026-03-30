@@ -12,6 +12,10 @@ export interface IntentParser {
   parse(
     prompt: string,
     actions: AvailableAction[],
-    options?: { sessionId: string; sessionStore: SessionStore<AgentSession> },
+    options?: {
+      sessionId: string;
+      sessionStore: SessionStore<AgentSession>;
+      maxLength?: number;
+    },
   ): Promise<Intent>;
 }
