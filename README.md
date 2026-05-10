@@ -137,7 +137,7 @@ const result = await agent.execute("User prompt");
 You can make your AI to memorize the context of conversation to better experience.
 
 ```js
-import { MemorySessionStore } from "actient/sessions";
+import { MemorySessionStore } from "actient";
 
 const agent = new AIAgent({
   ai: new GeminiIntentParser(),
@@ -147,6 +147,9 @@ const agent = new AIAgent({
     maxLength: 10, // length cache of messages
   },
 });
+
+// Important: Session IDs are created and managed by you. You can create multiple or single sessions for each user.
+const result = await agent.execute("User prompt", { sessionId: "session_id" });
 ```
 
 ### Memory Store
@@ -154,7 +157,7 @@ const agent = new AIAgent({
 This is a simple way to store your conversations but it's not recomended for complex case.
 
 ```js
-import { MemorySessionStore } from "actient/sessions";
+import { MemorySessionStore } from "actient";
 
 const agent = new AIAgent({
   ai: new GeminiIntentParser(),
@@ -171,7 +174,7 @@ const agent = new AIAgent({
 This is the better way to implement session store.
 
 ```js
-import { RedisSessionStore } from "actient/sessions";
+import { RedisSessionStore } from "actient";
 
 const redis = new Redis(); // from ioredis
 
@@ -187,15 +190,56 @@ const agent = new AIAgent({
 
 ### Custom Store
 
-You can create custom store by your own. You can integrate with your favorite database.
+You can create session store by your own. You can integrate with your favorite database.
 
-```js
-import type { AgentSession } from "actient";
+For example using `prisma`:
+
+```prisma
+model AgentSession {
+  id         String   @id @default(cuid())
+  sessionId  String   @unique
+  data       Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([sessionId])
+}
+```
+
+And your session store will look like this:
+
+```ts
+import type { SessionStore, AgentSession } from "actient";
+import { AIAgent } from "actient";
+import { prisma } from "@/lib/prisma";
 
 class MyCustomStore implements SessionStore<AgentSession> {
-  async get(sessionId: string) { ... }
-  async set(sessionId: string, data: AgentSession) { ... }
-  async clear(sessionId: string) { ... }
+  async get(sessionId: string) {
+    // get session data from postgre using prisma
+    const session = await prisma.agentSession.findUnique({
+      where: { sessionId },
+    });
+
+    if (!session) return null;
+
+    return session.data as AgentSession;
+  }
+
+  async set(sessionId: string, data: AgentSession) {
+    // post session data to database
+    await prisma.agentSession.upsert({
+      where: { sessionId },
+      update: { data },
+      create: { sessionId, data },
+    });
+  }
+
+  async clear(sessionId: string) {
+    // clear session from db
+    await prisma.agentSession.deleteMany({
+      where: { sessionId },
+    });
+  }
 }
 
 const agent = new AIAgent({
