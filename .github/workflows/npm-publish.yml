@@ -5,7 +5,7 @@ name: Actient
 
 on:
   release:
-    types: [published]
+    types: [created]
 
 jobs:
   build:
