@@ -2,8 +2,8 @@
   "name": "actient",
   "version": "1.1.0",
   "description": "",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "type": "module",
   "scripts": {
     "build": "tsup",
@@ -26,12 +26,14 @@
   ],
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     },
     "./providers/*": {
+      "types": "./dist/providers/*.d.ts",
       "import": "./dist/providers/*.js",
-      "types": "./dist/providers/*.d.ts"
+      "default": "./dist/providers/*.js"
     }
   },
   "dependencies": {
