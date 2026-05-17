@@ -167,13 +167,25 @@ export class AIAgent {
           );
         }
 
-        // Hanya works kalau previousResult adalah object
-        if (typeof previousResult === "object" && previousResult !== null) {
-          params = { ...params, ...previousResult };
+        if (step.paramMapping && Object.keys(step.paramMapping).length > 0) {
+          // Petik field spesifik sesuai mapping — support dot notation
+          for (const [targetKey, sourceKey] of Object.entries(
+            step.paramMapping,
+          )) {
+            params[targetKey] = sourceKey
+              .split(".")
+              .reduce((obj: any, key: string) => obj?.[key], previousResult);
+          }
         } else {
-          // Primitif tanpa mapping → inject sebagai "previousResult"
-          // LLM seharusnya define paramMapping untuk kasus ini
-          params = { ...params, previousResult };
+          // Tidak ada mapping — spread seluruh previousResult sebagai fallback
+          // Hanya works kalau previousResult adalah object
+          if (typeof previousResult === "object" && previousResult !== null) {
+            params = { ...params, ...previousResult };
+          } else {
+            // Primitif tanpa mapping → inject sebagai "previousResult"
+            // LLM seharusnya define paramMapping untuk kasus ini
+            params = { ...params, previousResult };
+          }
         }
       }
 
@@ -199,6 +211,7 @@ export class AIAgent {
       success: true,
       plan: plan.steps.map((s) => s.action),
       results,
+      summary: plan?.reasoning || "No reasoning provided.",
     };
   }
 }
