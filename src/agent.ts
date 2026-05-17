@@ -45,6 +45,7 @@ export class AIAgent {
       rules?: string[];
       schema: ZodSchema<TParams>;
       handler: (params: TParams) => Promise<TResult>;
+      outputSchema?: ZodSchema<TResult>;
     },
   ) {
     this.registry.register(name, config);
