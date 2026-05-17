@@ -12,7 +12,7 @@ export interface PlanStep {
    * null berarti step ini tidak butuh output dari step lain.
    */
   inputFrom: string | null;
-  // paramMapping?: Record<string, string>; // { targetKey: sourceKey }
+  paramMapping?: Record<string, string>; // { targetKey: sourceKey }
 }
 
 export interface Plan {
