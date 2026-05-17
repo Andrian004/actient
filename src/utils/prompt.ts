@@ -45,7 +45,10 @@ If no action matches, return:
 `.trim();
 };
 
-export const generatePlanPrompt = (actions: AvailableAction[]): string => {
+export const generatePlanPrompt = (
+  actions: AvailableAction[],
+  allowTransform: boolean = false,
+): string => {
   return `
 You are an execution planner.
 
@@ -87,9 +90,23 @@ Rules:
 - Set "inputFrom" to the action name whose result is needed, or null if this step is standalone
 - If output of the previous action needs to be mapped to specific params, use "paramMapping": { "targetParam": "sourceField" }
 - "sourceField" supports dot notation for nested fields (e.g. "user.id", "data.records")
-- If types are fundamentally incompatible (e.g. output is a number but input expects an object), do NOT chain them — set "inputFrom" to null and use only static params, or reconsider the plan
 - Only reference action names that appear earlier in the steps array
 - Do NOT assume hidden context or data not provided by the user
+${
+  allowTransform
+    ? `
+Transform rules (ONLY use when types are fundamentally incompatible):
+- If the output type of a step is fundamentally incompatible with the expected input of the next step (e.g. output is a number but input expects an object), insert a "__transform__" step between them
+- "__transform__" is a built-in special action, NOT from the available actions list
+- Set "inputFrom" to the action whose output needs to be transformed
+- Set "params.instructions" to a clear, specific instruction of how to reshape the data
+- The result of "__transform__" can then be referenced by the next step via "inputFrom": "__transform__"
+- Use "__transform__" as a LAST RESORT — prefer paramMapping first if field names just differ but types are compatible
+`
+    : `
+- If types are fundamentally incompatible (e.g. output is a number but input expects an object), do NOT chain them — set "inputFrom" to null and use only static params, or reconsider the plan
+`
+}
 
 Output format:
 {
@@ -102,6 +119,20 @@ Output format:
       "paramMapping": { "targetParam": "sourceField" } | null
     }
   ]
+}
+
+${
+  allowTransform
+    ? `Example with __transform__:
+{
+  "reasoning": "getCount returns a number, but generateReport expects an object, so transform is needed",
+  "steps": [
+    { "action": "getCount", "params": {}, "inputFrom": null, "paramMapping": null },
+    { "action": "__transform__", "params": { "instructions": "wrap the number into an object: { total: <value> }" }, "inputFrom": "getCount", "paramMapping": null },
+    { "action": "generateReport", "params": { "title": "Stock Report" }, "inputFrom": "__transform__", "paramMapping": { "total": "total" } }
+  ]
+}`
+    : ""
 }
   `.trim();
 };
@@ -119,49 +150,3 @@ ${JSON.stringify(input, null, 2)}
 Instructions:
 ${instructions}`;
 };
-
-// export const generatePlanPrompt = (actions: AvailableAction[]): string => {
-//   return `
-//   You are an execution planner.
-
-// Your task is to convert user request into ordered execution steps.
-
-// Available actions:
-// ${actions
-//   .map(
-//     (a) => `- ${a.name}: ${a.description}
-//   Parameters:
-// ${Object.entries(a.parameters)
-//   .map(([key, type]) => `    - ${key}: ${type}`)
-//   .join("\n")}
-//   Specific rules: ${
-//     a.rules?.length ? a.rules.map((r) => `    - ${r}`).join("\n") : "    - None"
-//   }
-//   `,
-//   )
-//   .join("\n")}
-
-// Rules:
-// - Return ONLY valid JSON
-// - Do NOT explain anything
-// - Do NOT include markdown
-// - Do NOT invent actions
-// - Only use listed actions
-// - Steps must be ordered logically
-// - If a step depends on previous result, use "$stepId.property"
-// - Only reference step IDs defined earlier
-// - Do NOT assume hidden context
-
-// Format:
-// {
-//   "reasoning": "why you chose these steps",
-//   "steps": [
-//     {
-//       "action": "actionName",
-//       "params": { ... },
-//       "inputFrom": "previousActionName" | null
-//     }
-//   ]
-// }
-//   `;
-// };

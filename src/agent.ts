@@ -108,6 +108,7 @@ export class AIAgent {
       sessionId: options?.sessionId || "",
       sessionStore: this.sessionStore,
       maxLength: this.session?.maxLength || 0,
+      allowTransform: options?.allowTransform ?? false,
     });
 
     if (!plan?.steps?.length) {

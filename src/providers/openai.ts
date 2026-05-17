@@ -85,10 +85,14 @@ export class OpenAIIntentParser implements IntentParser {
       sessionId: string;
       sessionStore: SessionStore<AgentSession>;
       maxLength?: number;
+      allowTransform?: boolean;
     },
   ): Promise<Plan> {
     const client = await this.getClient();
-    const systemPrompt = generatePlanPrompt(actions);
+    const systemPrompt = generatePlanPrompt(
+      actions,
+      options?.allowTransform ?? false,
+    );
 
     let history: AIMessage[] = [];
 

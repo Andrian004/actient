@@ -28,6 +28,7 @@ export interface IntentParser {
       sessionId: string;
       sessionStore: SessionStore<AgentSession>;
       maxLength?: number;
+      allowTransform?: boolean; // opsi untuk mengizinkan LLM menggunakan transform agent
     },
   ): Promise<Plan>;
 
