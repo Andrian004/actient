@@ -19,13 +19,11 @@ export class AIAgent {
   private intentParser: IntentParser;
   private session: Session;
   private sessionStore: SessionStore<AgentSession> | null = null;
-  // private mode: "single" | "plan";
 
   constructor(options: { ai: IntentParser; session: Session }) {
     this.registry = new ActionRegistry();
     this.intentParser = options.ai;
     this.session = options.session;
-    // this.mode = options.mode || "single";
 
     if (this.session.enabled) {
       if (!this.session.store) {
@@ -62,19 +60,11 @@ export class AIAgent {
     if (!this.sessionStore) throw new Error("Session is not defined");
 
     let intent;
-    // if (this.mode === "plan") {
-    // intent = await this.intentParser.parsePlan(prompt, availableActions, {
-    //   sessionId: options?.sessionId || "",
-    //   sessionStore: this.sessionStore,
-    //   maxLength: this.session?.maxLength || 0,
-    // });
-    // } else {
     intent = await this.intentParser.parse(prompt, availableActions, {
       sessionId: options?.sessionId || "",
       sessionStore: this.sessionStore,
       maxLength: this.session?.maxLength || 0,
     });
-    // }
 
     if (!intent?.action) {
       throw new Error("Invalid intent: missing action");
@@ -103,7 +93,7 @@ export class AIAgent {
     const availableActions = this.registry.list();
     if (!this.sessionStore) throw new Error("Session is not defined");
 
-    // 1. Generate plan dari LLM
+    // 1. Generate plan from LLM
     const plan = await this.intentParser.parsePlan(prompt, availableActions, {
       sessionId: options?.sessionId || "",
       sessionStore: this.sessionStore,
@@ -115,9 +105,9 @@ export class AIAgent {
       throw new Error("AI could not generate a valid plan for this prompt.");
     }
 
-    // 2. Jalankan tiap step secara sequential
+    // 2. Run through each step in the plan
     const results: PlanStepResult[] = [];
-    // Map untuk lookup result berdasarkan nama action
+    // Map to lookup result based on action name
     const resultMap: Record<string, any> = {};
 
     for (const step of plan.steps) {
@@ -168,7 +158,7 @@ export class AIAgent {
         }
 
         if (step.paramMapping && Object.keys(step.paramMapping).length > 0) {
-          // Petik field spesifik sesuai mapping — support dot notation
+          // Get specific fields according to mapping — support dot notation
           for (const [targetKey, sourceKey] of Object.entries(
             step.paramMapping,
           )) {
@@ -177,29 +167,28 @@ export class AIAgent {
               .reduce((obj: any, key: string) => obj?.[key], previousResult);
           }
         } else {
-          // Tidak ada mapping — spread seluruh previousResult sebagai fallback
-          // Hanya works kalau previousResult adalah object
+          // No mapping — spread all previousResult as fallback
+          // Only works if previousResult is an object
           if (typeof previousResult === "object" && previousResult !== null) {
             params = { ...params, ...previousResult };
           } else {
-            // Primitif tanpa mapping → inject sebagai "previousResult"
-            // LLM seharusnya define paramMapping untuk kasus ini
+            // Primitive without mapping → inject as "previousResult"
+            // LLM should define paramMapping for this case
             params = { ...params, previousResult };
           }
         }
       }
 
-      // 4. Validasi params dengan schema yang sudah ada
+      // 4. Validate params with existing schema
       const validatedParams = action.schema.parse(params);
 
-      // 5. Eksekusi — stop dan throw kalau gagal
+      // 5. Execute — stop and throw if failed
       try {
         const result = await action.handler(validatedParams);
         resultMap[step.action] = result;
         results.push({ action: step.action, result, status: "success" });
       } catch (err) {
         const error = err instanceof Error ? err.message : String(err);
-        // Langsung throw — sesuai keputusan: stop eksekusi kalau ada yang gagal
         throw new Error(
           `Plan execution failed at action "${step.action}": ${error}`,
         );

@@ -7,9 +7,9 @@ export interface PlanStep {
   action: string;
   params: Record<string, any>;
   /**
-   * Nama action sebelumnya yang outputnya di-inject ke params step ini.
-   * LLM yang menentukan ini saat generate plan.
-   * null berarti step ini tidak butuh output dari step lain.
+   * Name of the previous action whose output is injected into this step's params.
+   * LLM determines this when generating the plan.
+   * null means this step does not require output from another step.
    */
   inputFrom: string | null;
   paramMapping?: Record<string, string>; // { targetKey: sourceKey }
@@ -18,8 +18,8 @@ export interface PlanStep {
 export interface Plan {
   steps: PlanStep[];
   /**
-   * Reasoning singkat dari LLM kenapa plan ini dipilih.
-   * Berguna untuk debugging.
+   * Reasoning from the LLM on why this plan was chosen.
+   * Useful for debugging and understanding the LLM's decision-making process.
    */
   reasoning: string;
 }
@@ -33,7 +33,7 @@ export interface PlanStepResult {
 
 export interface PlanResult {
   success: boolean;
-  plan: string[]; // nama actions yang dieksekusi, berurutan
+  plan: string[]; // List of action names in execution order
   results: PlanStepResult[];
   summary?: string;
 }

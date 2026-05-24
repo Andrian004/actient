@@ -6,7 +6,7 @@ export interface AvailableAction {
   rules?: string[];
   description: string;
   parameters: Record<string, string>;
-  output?: Record<string, string>; // ← tambahan
+  output?: Record<string, string>; // ← additional
 }
 
 export interface IntentParser {
@@ -20,7 +20,7 @@ export interface IntentParser {
     },
   ): Promise<Intent>;
 
-  // method baru untuk plan agent
+  // new method for plan agent
   parsePlan(
     prompt: string,
     actions: AvailableAction[],
@@ -28,10 +28,10 @@ export interface IntentParser {
       sessionId: string;
       sessionStore: SessionStore<AgentSession>;
       maxLength?: number;
-      allowTransform?: boolean; // opsi untuk mengizinkan LLM menggunakan transform agent
+      allowTransform?: boolean; // option to allow LLM to use transform agent
     },
   ): Promise<Plan>;
 
-  // method baru untuk transform agent
+  // new method for transform agent
   transform(input: string, instructions: string): Promise<any>;
 }

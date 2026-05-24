@@ -10,7 +10,7 @@ export interface ActionDefinition<TParams = any, TResult = any> {
   rules?: string[];
   schema: ZodSchema<TParams>;
   handler: ActionHandler<TParams, TResult>;
-  outputSchema?: ZodSchema<TResult>; // ← tambahan, opsional
+  outputSchema?: ZodSchema<TResult>; // ← additional, optional
 }
 
 export class ActionRegistry {
@@ -42,7 +42,7 @@ export class ActionRegistry {
     rules: string[];
     description: string;
     parameters: Record<string, string>;
-    output?: Record<string, string>; // ← tambahan
+    output?: Record<string, string>; // ← additional
   }> {
     return Array.from(this.actions.entries()).map(([name, action]) => ({
       name,
@@ -60,8 +60,8 @@ export class ActionRegistry {
   }
 
   private zodToSimpleSchema(schema: ZodSchema<any>): Record<string, string> {
-    // Kalau bukan ZodObject, wrap sebagai single "value" field
-    // supaya LLM tetap dapat informasi tipe outputnya
+    // If it's not a ZodObject, treat it as a single "value" field
+    // so that LLM still gets the output type information
     if (!(schema instanceof z.ZodObject)) {
       return { value: this.mapZodType(schema) };
     }
