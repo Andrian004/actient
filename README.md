@@ -108,6 +108,7 @@ agent.registerAction("action_identifier", {
   schema: z.object({
     params: z.string(),
   }),
+  outputSchema: z.string(),
   handler: async ({ params }) => {
     // you can create simple or complex logic here
     return `Success to execute: ${params}`;
@@ -123,6 +124,7 @@ agent.registerAction("action_identifier", {
 | description  | string          | ✅       | Brief explanation of the action function (used in the system prompt) |
 | rules        | array of string | ❌       | Specific rules for the action                                        |
 | schema       | ZodSchema       | ✅       | Zod schema for action parameter validation                           |
+| outputSchema | ZodSchema       | ❌       | Zod schema for action output                                         |
 | handler      | function        | ✅       | Async function that will be executed by AI                           |
 
 ### execute()
