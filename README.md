@@ -11,6 +11,7 @@ Connect and run your functions with your favorite AI easier.
   - [AI Agent](#ai-agent)
   - [registerAction()](#registeraction)
   - [execute()](#execute)
+  - [executePlan()](#executeplan)
 - [Sessions](#session)
   - [Memory Store](#memory-store)
   - [Redis](#redis-store)
@@ -107,6 +108,7 @@ agent.registerAction("action_identifier", {
   schema: z.object({
     params: z.string(),
   }),
+  outputSchema: z.string(),
   handler: async ({ params }) => {
     // you can create simple or complex logic here
     return `Success to execute: ${params}`;
@@ -122,6 +124,7 @@ agent.registerAction("action_identifier", {
 | description  | string          | ✅       | Brief explanation of the action function (used in the system prompt) |
 | rules        | array of string | ❌       | Specific rules for the action                                        |
 | schema       | ZodSchema       | ✅       | Zod schema for action parameter validation                           |
+| outputSchema | ZodSchema       | ❌       | Zod schema for action output                                         |
 | handler      | function        | ✅       | Async function that will be executed by AI                           |
 
 ### execute()
@@ -131,6 +134,36 @@ Runs agent based on user input.
 ```js
 const result = await agent.execute("User prompt");
 ```
+
+> `execute` can only run one action, if you want to run multiple actions, use `executePlan()`
+
+### executePlan()
+
+`executePlan()` allows the AI to execute **multiple actions in sequence** by creating an execution plan automatically.
+
+Simply register your actions, and the agent will decide which functions to call and in what order.
+
+**Basic Usage:**
+
+```js
+const result = await agent.executePlan(message, {
+  sessionId,
+});
+```
+
+**Enable Result Transformation:**
+
+Set `allowTransform` to `true` if you want the AI to **transform the result of a previous action before passing it to the next one**.
+
+```js
+const result = await agent.executePlan(message, {
+  sessionId,
+  allowTransform: true,
+});
+```
+
+> **Warning**  
+> When `allowTransform` is enabled, the AI can read the results of executed actions. Avoid returning sensitive or private data unless necessary.
 
 ## Session
 

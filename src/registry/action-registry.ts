@@ -10,6 +10,7 @@ export interface ActionDefinition<TParams = any, TResult = any> {
   rules?: string[];
   schema: ZodSchema<TParams>;
   handler: ActionHandler<TParams, TResult>;
+  outputSchema?: ZodSchema<TResult>; // ← additional, optional
 }
 
 export class ActionRegistry {
@@ -41,12 +42,16 @@ export class ActionRegistry {
     rules: string[];
     description: string;
     parameters: Record<string, string>;
+    output?: Record<string, string>; // ← additional
   }> {
     return Array.from(this.actions.entries()).map(([name, action]) => ({
       name,
       rules: action.rules || [],
       description: action.description,
       parameters: this.zodToSimpleSchema(action.schema),
+      ...(action.outputSchema && {
+        output: this.zodToSimpleSchema(action.outputSchema),
+      }),
     }));
   }
 
@@ -54,18 +59,18 @@ export class ActionRegistry {
     return this.actions.has(name);
   }
 
-  private zodToSimpleSchema(schema: ZodSchema<any>) {
+  private zodToSimpleSchema(schema: ZodSchema<any>): Record<string, string> {
+    // If it's not a ZodObject, treat it as a single "value" field
+    // so that LLM still gets the output type information
     if (!(schema instanceof z.ZodObject)) {
-      return {};
+      return { value: this.mapZodType(schema) };
     }
 
     const shape = schema.shape;
     const result: Record<string, string> = {};
 
     for (const key in shape) {
-      const field = shape[key];
-
-      result[key] = this.mapZodType(field);
+      result[key] = this.mapZodType(shape[key]);
     }
 
     return result;
